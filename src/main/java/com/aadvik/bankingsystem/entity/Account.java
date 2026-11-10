@@ -1,0 +1,33 @@
+package com.aadvik.bankingsystem.entity;
+
+import jakarta.persistence.*;
+
+@Entity
+
+public class Account {
+	
+	@Id
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	private Long id;
+	
+	public Long getId() {
+		return id;
+	}
+	public void setId(Long id) {
+		this.id = id;
+	}
+	public String getHolderName() {
+		return holderName;
+	}
+	public void setHolderName(String holderName) {
+		this.holderName = holderName;
+	}
+	public double getBalance() {
+		return balance;
+	}
+	public void setBalance(double balance) {
+		this.balance = balance;
+	}
+	private String holderName;
+	private double balance;
+}
