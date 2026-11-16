@@ -1,6 +1,8 @@
 package com.aadvik.bankingsystem.controller;
 import java.util.List;
+import java.util.Optional;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -47,7 +49,12 @@ public class AccountController {
             return ResponseEntity.badRequest().body("Amount must be positive");
         }
     	
-        Account account = repository.findById(id).orElseThrow();
+    	Optional<Account> found = repository.findById(id);
+    	if (found.isEmpty()) {
+    	    return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Account not found");
+    	}
+    	
+    	Account account = found.get();
         account.setBalance(account.getBalance()+amount);
         
         return ResponseEntity.ok(repository.save(account));
@@ -56,11 +63,17 @@ public class AccountController {
     
     @PutMapping("/{id}/withdraw")
     public ResponseEntity<?> withdraw(@PathVariable Long id, @RequestParam double amount) {
-        Account account = repository.findById(id).orElseThrow();
-        
-        if (amount <= 0) {
+    	
+    	if (amount <= 0) {
             return ResponseEntity.badRequest().body("Amount must be positive");
         }
+    	
+    	Optional<Account> found = repository.findById(id);
+    	if (found.isEmpty()) {
+    	    return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Account not found");
+    }
+    	
+    	Account account = found.get();
 
         if (amount > account.getBalance()) {
             return ResponseEntity.badRequest().body("Insufficient balance");
@@ -79,8 +92,17 @@ public class AccountController {
             return ResponseEntity.badRequest().body("Amount must be positive");      
     	}
     	
-    	Account sender = repository.findById(fromId).orElseThrow();
-        Account receiver = repository.findById(toId).orElseThrow();
+    	Optional<Account> foundSender = repository.findById(fromId);
+    	if (foundSender.isEmpty()) {
+    	    return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Sender account not found");
+    	}
+    	Account sender = foundSender.get();
+    	
+    	Optional<Account> foundReceiver = repository.findById(toId);
+    	if (foundReceiver.isEmpty()) {
+    	    return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Receiver account not found");
+    	}
+    	Account receiver = foundReceiver.get();
 
         if (amount>sender.getBalance()) {
         	return ResponseEntity.badRequest().body("Insufficient balance");
@@ -92,5 +114,7 @@ public class AccountController {
         repository.save(sender);
         repository.save(receiver);
 
-        return ResponseEntity.ok("Transfer successful");    }
+        return ResponseEntity.ok("Transfer successful");    
+        
+    }
 }
