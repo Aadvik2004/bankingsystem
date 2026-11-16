@@ -1,8 +1,17 @@
 package com.aadvik.bankingsystem.controller;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
-import org.springframework.web.bind.annotation.*;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.aadvik.bankingsystem.entity.Account;
 import com.aadvik.bankingsystem.repository.AccountRepository;
 
@@ -30,32 +39,51 @@ public class AccountController {
     }
     
     @PutMapping("/{id}/deposit")
-    public Account deposit(@PathVariable Long id, @RequestParam double amount) {
+    
+    
+    public ResponseEntity<?> deposit(@PathVariable Long id, @RequestParam double amount) {
+    	
+    	if (amount <= 0) {
+            return ResponseEntity.badRequest().body("Amount must be positive");
+        }
+    	
         Account account = repository.findById(id).orElseThrow();
         account.setBalance(account.getBalance()+amount);
-        return repository.save(account);
+        
+        return ResponseEntity.ok(repository.save(account));
+        
     }
     
     @PutMapping("/{id}/withdraw")
-    public Account withdraw(@PathVariable Long id, @RequestParam double amount) {
+    public ResponseEntity<?> withdraw(@PathVariable Long id, @RequestParam double amount) {
         Account account = repository.findById(id).orElseThrow();
-
-        if (amount>account.getBalance()) {
-            throw new RuntimeException("Insufficient balance");
+        
+        if (amount <= 0) {
+            return ResponseEntity.badRequest().body("Amount must be positive");
         }
 
-        account.setBalance(account.getBalance()-amount);
-        return repository.save(account);
+        if (amount > account.getBalance()) {
+            return ResponseEntity.badRequest().body("Insufficient balance");
+            
+        }
+
+        account.setBalance(account.getBalance() - amount);
+        return ResponseEntity.ok(repository.save(account));
     }
     
     @Transactional
     @PutMapping("/transfer")
-    public String transfer(@RequestParam Long fromId, @RequestParam Long toId, @RequestParam double amount) {
-        Account sender = repository.findById(fromId).orElseThrow();
+    public ResponseEntity<?> transfer(@RequestParam Long fromId, @RequestParam Long toId, @RequestParam double amount) {
+    	
+    	if (amount <= 0) {
+            return ResponseEntity.badRequest().body("Amount must be positive");      
+    	}
+    	
+    	Account sender = repository.findById(fromId).orElseThrow();
         Account receiver = repository.findById(toId).orElseThrow();
 
         if (amount>sender.getBalance()) {
-            throw new RuntimeException("Insufficient balance");
+        	return ResponseEntity.badRequest().body("Insufficient balance");
         }
 
         sender.setBalance(sender.getBalance()-amount);
@@ -64,6 +92,5 @@ public class AccountController {
         repository.save(sender);
         repository.save(receiver);
 
-        return "Transfer successful";
-    }
+        return ResponseEntity.ok("Transfer successful");    }
 }
