@@ -40,6 +40,15 @@ public class AccountController {
         return repository.findAll();
     }
     
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getById(@PathVariable Long id) {
+        Optional<Account> found = repository.findById(id);
+        if (found.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Account not found");
+        }
+        return ResponseEntity.ok(found.get());
+    }
+    
     @PutMapping("/{id}/deposit")
     
     
